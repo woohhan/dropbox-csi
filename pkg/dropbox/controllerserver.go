@@ -2,6 +2,7 @@ package dropbox
 
 import (
 	"github.com/container-storage-interface/spec/lib/go/csi"
+	"github.com/golang/glog"
 	"golang.org/x/net/context"
 )
 
@@ -13,6 +14,30 @@ func NewControllerServer(nodeID string) *controllerServer {
 	return &controllerServer{
 		nodeID: nodeID,
 	}
+}
+
+func (c controllerServer) ControllerGetCapabilities(context.Context, *csi.ControllerGetCapabilitiesRequest) (*csi.ControllerGetCapabilitiesResponse, error) {
+	return &csi.ControllerGetCapabilitiesResponse{
+		Capabilities: getControllerServiceCapabilities(
+			[]csi.ControllerServiceCapability_RPC_Type{}),
+	}, nil
+}
+
+func getControllerServiceCapabilities(cl []csi.ControllerServiceCapability_RPC_Type) []*csi.ControllerServiceCapability {
+	var csc []*csi.ControllerServiceCapability
+
+	for _, cap := range cl {
+		glog.Infof("Enabling controller service capability: %v", cap.String())
+		csc = append(csc, &csi.ControllerServiceCapability{
+			Type: &csi.ControllerServiceCapability_Rpc{
+				Rpc: &csi.ControllerServiceCapability_RPC{
+					Type: cap,
+				},
+			},
+		})
+	}
+
+	return csc
 }
 
 func (c controllerServer) CreateVolume(context.Context, *csi.CreateVolumeRequest) (*csi.CreateVolumeResponse, error) {
@@ -40,10 +65,6 @@ func (c controllerServer) ListVolumes(context.Context, *csi.ListVolumesRequest) 
 }
 
 func (c controllerServer) GetCapacity(context.Context, *csi.GetCapacityRequest) (*csi.GetCapacityResponse, error) {
-	panic("implement me")
-}
-
-func (c controllerServer) ControllerGetCapabilities(context.Context, *csi.ControllerGetCapabilitiesRequest) (*csi.ControllerGetCapabilitiesResponse, error) {
 	panic("implement me")
 }
 

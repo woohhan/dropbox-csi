@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: dropbox-pv
+spec:
+  accessModes:
+    - ReadWriteOnce
+  capacity:
+    storage: 1Mi
+  csi:
+    driver: dropbox.csi.k8s.io
+    volumeHandle: existingVolumeName
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: dropbox-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Mi
+  storageClassName: ""
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: dropbox-pod
+spec:
+  containers:
+    - name: dropbox-pod
+      image: nginx
+      volumeMounts:
+        - mountPath: "/var/www/html"
+          name: mypv
+  volumes:
+    - name: mypv
+      persistentVolumeClaim:
+        claimName: dropbox-pvc

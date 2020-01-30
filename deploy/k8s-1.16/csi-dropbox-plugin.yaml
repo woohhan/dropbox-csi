@@ -1,7 +1,6 @@
 # Service defined here, plus serviceName below in StatefulSet,
 # are needed only because of condition explained in
 # https://github.com/kubernetes/kubernetes/issues/69608
-
 kind: Service
 apiVersion: v1
 metadata:
@@ -22,7 +21,7 @@ metadata:
 spec:
   serviceName: "csi-dropboxplugin"
   # One replica only:
-  # Host path driver only works when everything runs
+  # Dropbox driver only works when everything runs
   # on a single node. We achieve that by starting it once and then
   # co-locate all other pods via inter-pod affinity
   replicas: 1
@@ -57,10 +56,10 @@ spec:
                   apiVersion: v1
                   fieldPath: spec.nodeName
           volumeMounts:
-          - mountPath: /csi
-            name: socket-dir
-          - mountPath: /registration
-            name: registration-dir
+            - mountPath: /csi
+              name: socket-dir
+            - mountPath: /registration
+              name: registration-dir
       volumes:
         - hostPath:
             path: /var/lib/kubelet/plugins/csi-dropbox

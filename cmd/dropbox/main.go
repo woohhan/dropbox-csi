@@ -1,7 +1,7 @@
 package main
 
 import (
-	"dropbox-csi/pkg/dropbox"
+	"github.com/woohhan/dropbox-csi/pkg/dropbox"
 
 	"flag"
 	"fmt"

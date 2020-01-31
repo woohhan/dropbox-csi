@@ -1,0 +1,17 @@
+dist: bionic
+language: go
+jobs:
+  include:
+    - stage: lint & unit tests
+      script: echo 'test lint & unit ok'
+    - stage: e2e tests
+      script:
+        - make build
+        - sudo apt-get install -y python3.6 python3-pip python3-setuptools && pip3 install --user travis --upgrade --no-cache-dir setuptools wheel dbxfs
+        - curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 && chmod +x minikube && sudo mkdir -p /usr/local/bin/ && sudo install minikube /usr/local/bin/
+        - sudo snap install kubectl --classic
+        - make test-cluster-up && kubectl get pods -A
+        - make yaml-deploy
+      after_script:
+        - make yaml-clean
+        - make test-cluster-clean

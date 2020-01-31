@@ -1,7 +1,1 @@
-# CSI for Dropbox
-## Testing
-```shell
-./hack.sh make-cp
-./hack.sh clean
-./hack.sh deploy
-```
+# CSI for Dropbox [![Build Status](https://travis-ci.org/woohhan/dropbox-csi.svg?branch=master)](https://travis-ci.org/woohhan/dropbox-csi)

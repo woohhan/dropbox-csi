@@ -1,7 +1,11 @@
 .DEFAULT_GOAL := help
 
 build:
-	go build -o build/dropbox-csi ./cmd/dropbox
+	CGO_ENABLED=0 GOOS=linux go build -a -ldflags '-extldflags "-static"' -o ./build/dropbox-csi ./cmd/dropbox
+image-build:
+	make clean
+	make build
+	docker build -t dropbox-csi:canary -f Dockerfile .
 clean:
 	go clean ./...
 	rm -rf build/
@@ -23,6 +27,7 @@ yaml-clean:
 help:
 	@echo "Usage: make [Target ...]"
 	@echo "  build"
+	@echo "  image-build"
 	@echo "  clean"
 	@echo "  test-cluster-up"
 	@echo "  test-cluster-clean"

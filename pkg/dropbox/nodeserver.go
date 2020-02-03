@@ -2,6 +2,7 @@ package dropbox
 
 import (
 	"bufio"
+	"bytes"
 	"os"
 	"os/exec"
 	"strings"
@@ -25,7 +26,7 @@ func NewNodeServer(nodeId string) *nodeServer {
 }
 
 const (
-	volumePath string = "/csi-dropbox-data"
+	volumePath string = "/mnt/csi-dropbox-data"
 )
 
 func (n *nodeServer) NodeGetInfo(context.Context, *csi.NodeGetInfoRequest) (*csi.NodeGetInfoResponse, error) {
@@ -58,24 +59,29 @@ func (n nodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStageVolum
 		return nil, err
 	}
 
-	err = writeFile("/tmp/dbxfs_config.json", "{\"access_token_command\": [\"cat\", \"/tmp/dbxfs_token\"], \"send_error_reports\": true, \"asked_send_error_reports\": true}")
+	err = writeFile("/dbxfs_config.json", "{\"access_token_command\": [\"cat\", \"/dbxfs_token\"], \"send_error_reports\": true, \"asked_send_error_reports\": true}")
 	if err != nil {
 		glog.Error("Can't create dbxfs config file")
 		return nil, err
 	}
 
-	err = writeFile("/tmp/dbxfs_token", token)
+	err = writeFile("/dbxfs_token", token)
 	if err != nil {
 		glog.Error("Can't create dbxfs token file")
 		return nil, err
 	}
 
-	_, err = exec.Command("dbxfs", volumePath, "-c", "/tmp/dbxfs_config.json").Output()
+	cmd := exec.Command("dbxfs", volumePath, "-c", "/dbxfs_config.json")
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	err = cmd.Run()
 	if err != nil {
-		glog.Error("Cant mount dbxfs %s", err)
+		glog.Errorf("Cant mount dbxfs: %s %s", stdout.String(), stderr.String())
 		return nil, err
 	}
-	glog.V(4).Infof("dropbox-csi: volume %v is mounted", volumePath)
+	glog.V(4).Infof("dropbox-csi: volume %s is mounted %s", volumePath, stdout.String())
 
 	return &csi.NodeStageVolumeResponse{}, nil
 }

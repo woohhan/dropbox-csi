@@ -1,7 +1,9 @@
 package dropbox
 
 import (
+	"bufio"
 	"os"
+	"os/exec"
 	"strings"
 
 	"github.com/container-storage-interface/spec/lib/go/csi"
@@ -33,10 +35,6 @@ func (n *nodeServer) NodeGetInfo(context.Context, *csi.NodeGetInfoRequest) (*csi
 }
 
 func (n nodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStageVolumeRequest) (*csi.NodeStageVolumeResponse, error) {
-	glog.Infof("volumeId: %v", req.GetVolumeId())
-	glog.Infof("targetPath: %v", req.GetStagingTargetPath())
-	glog.Infof("cap: %v", req.GetVolumeCapability())
-
 	if len(req.GetVolumeId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Volume ID missing in request")
 	}
@@ -46,15 +44,60 @@ func (n nodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStageVolum
 	if req.GetVolumeCapability() == nil {
 		return nil, status.Error(codes.InvalidArgument, "Volume Capability missing in request")
 	}
+	token, exists := req.Secrets["token"]
+	if !exists {
+		return nil, status.Error(codes.InvalidArgument, "Token not exists")
+	}
+
+	glog.Infof("targetPath: %v", req.GetStagingTargetPath())
+	glog.Infof("volumePath: %v", volumePath)
 
 	err := os.MkdirAll(volumePath, 0777)
 	if err != nil {
+		glog.Error("Can't create volumePath %s", volumePath)
 		return nil, err
 	}
 
-	// TODO: dropbox 마운트하기
+	err = writeFile("/tmp/dbxfs_config.json", "{\"access_token_command\": [\"cat\", \"/tmp/dbxfs_token\"], \"send_error_reports\": true, \"asked_send_error_reports\": true}")
+	if err != nil {
+		glog.Error("Can't create dbxfs config file")
+		return nil, err
+	}
+
+	err = writeFile("/tmp/dbxfs_token", token)
+	if err != nil {
+		glog.Error("Can't create dbxfs token file")
+		return nil, err
+	}
+
+	_, err = exec.Command("dbxfs", volumePath, "-c", "/tmp/dbxfs_config.json").Output()
+	if err != nil {
+		glog.Error("Cant mount dbxfs %s", err)
+		return nil, err
+	}
+	glog.V(4).Infof("dropbox-csi: volume %v is mounted", volumePath)
 
 	return &csi.NodeStageVolumeResponse{}, nil
+}
+
+func writeFile(path, contents string) error {
+	outfile, err := os.Create(path)
+	if err != nil {
+		glog.Error("Can't create %s", path)
+		return err
+	}
+
+	writer := bufio.NewWriter(outfile)
+	_, err = writer.WriteString(contents)
+	if err != nil {
+		glog.Error("Can't write %s", path)
+		return err
+	}
+
+	writer.Flush()
+	outfile.Close()
+
+	return nil
 }
 
 func (n nodeServer) NodeUnstageVolume(ctx context.Context, req *csi.NodeUnstageVolumeRequest) (*csi.NodeUnstageVolumeResponse, error) {
@@ -64,6 +107,12 @@ func (n nodeServer) NodeUnstageVolume(ctx context.Context, req *csi.NodeUnstageV
 	if len(req.GetStagingTargetPath()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Target path missing in request")
 	}
+
+	err := mount.New("").Unmount(volumePath)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	glog.V(4).Infof("dropbox-csi: volume %s is unmounted,", volumePath)
 
 	return &csi.NodeUnstageVolumeResponse{}, nil
 }

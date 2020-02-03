@@ -1,4 +1,12 @@
 apiVersion: v1
+kind: Secret
+metadata:
+  name: dropbox-csi
+type: Opaque
+data:
+  token: MjRYQ3NISUlMakFBQUFBQUFBQUFEVXFrMy1GVHQ1SUppWlkxRUlwelB0VV9rTFBBZlk0YzN2WDNtZXlfYldsOQ==
+---
+apiVersion: v1
 kind: PersistentVolume
 metadata:
   name: dropbox-pv
@@ -10,6 +18,9 @@ spec:
   csi:
     driver: dropbox.csi.k8s.io
     volumeHandle: existingVolumeName
+    nodeStageSecretRef:
+      name: dropbox-csi
+      namespace: default
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim

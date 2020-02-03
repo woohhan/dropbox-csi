@@ -1,6 +1,7 @@
 .DEFAULT_GOAL := help
 
 build:
+	make clean
 	CGO_ENABLED=0 GOOS=linux go build -a -ldflags '-extldflags "-static"' -o ./build/dropbox-csi ./cmd/dropbox
 image-build:
 	make clean

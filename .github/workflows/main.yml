@@ -27,3 +27,12 @@ jobs:
         run: make yaml-clean
       - name: test cluster clean
         run: make test-cluster-clean
+      - uses: azure/docker-login@v1
+        with:
+          login-server: quay.io
+          username: woohhan
+          password: ${{ secrets.QuayPassword }}
+      - name: push with latests
+        run: |
+          docker tag dropbox-csi:canary quay.io/woohhan/dropbox-csi:latest
+          docker push quay.io/woohhan/dropbox-csi:latest

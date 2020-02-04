@@ -1,1 +1,1 @@
-# CSI for Dropbox [![Build Status](https://travis-ci.org/woohhan/dropbox-csi.svg?branch=master)](https://travis-ci.org/woohhan/dropbox-csi)
+# CSI for Dropbox ![Dropbox-CSI](https://github.com/woohhan/dropbox-csi/workflows/Dropbox-CSI/badge.svg)

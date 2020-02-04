@@ -1,0 +1,29 @@
+name: Dropbox-CSI
+on: [push]
+jobs:
+  e2e:
+    runs-on: ubuntu-18.04
+    steps:
+      - name: checkout
+        uses: actions/checkout@v1
+      - name: docker image build
+        run: make image-build
+      - name: install minikube
+        run: |
+          curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+          chmod +x minikube
+          sudo mkdir -p /usr/local/bin/
+          sudo install minikube /usr/local/bin/
+          sudo snap install kubectl --classic
+      - name: test cluster up
+        run: make test-cluster-up && kubectl get pods -A
+      - name: yaml deploy
+        run: |
+          make yaml-deploy
+          kubectl wait --for=condition=Ready pod/dropbox-pod --timeout 180s
+      - name: check dropbox mount
+        run: kubectl exec -it dropbox-pod -- ls /var/www/html | grep e2e_test_file > /dev/null
+      - name: yaml clean
+        run: make yaml-clean
+      - name: test cluster clean
+        run: make test-cluster-clean

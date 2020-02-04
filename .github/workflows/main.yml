@@ -18,11 +18,9 @@ jobs:
       - name: test cluster up
         run: make test-cluster-up && kubectl get pods -A
       - name: yaml deploy
-        run: |
-          make yaml-deploy
-          kubectl wait --for=condition=Ready pod/dropbox-pod --timeout 180s
-      - name: check dropbox mount
-        run: kubectl exec -it dropbox-pod -- ls /var/www/html | grep e2e_test_file > /dev/null
+        run: make yaml-deploy
+      - name: e2e tests
+        run: make test
       - name: yaml clean
         run: make yaml-clean
       - name: test cluster clean

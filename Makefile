@@ -23,11 +23,16 @@ yaml-deploy:
 	kubectl create -f /tmp/csi-dropbox-plugin.yaml
 	kubectl create -f deploy/k8s-1.17/csi-dropbox-attacher.yaml
 	kubectl create -f deploy/pod.yaml
+	sleep 5
+	kubectl wait --for=condition=Ready pod/dropbox-pod --timeout 90s
 yaml-clean:
 	kubectl delete --ignore-not-found=true -f deploy/pod.yaml
 	kubectl delete --ignore-not-found=true -f deploy/k8s-1.17/csi-dropbox-attacher.yaml
 	kubectl delete --ignore-not-found=true -f deploy/k8s-1.17/csi-dropbox-plugin.yaml
 	kubectl delete --ignore-not-found=true -f deploy/k8s-1.17/rbac.yaml
+test:
+	kubectl exec -it dropbox-pod -- ls /var/www/html
+	kubectl exec -it dropbox-pod -- ls /var/www/html | grep e2e_test_file > /dev/null
 help:
 	@echo "Usage: make [Target ...]"
 	@echo "  build"
@@ -37,3 +42,4 @@ help:
 	@echo "  test-cluster-clean"
 	@echo "  yaml-deploy"
 	@echo "  yaml-clean"
+	@echo "  test"

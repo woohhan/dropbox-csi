@@ -17,15 +17,17 @@ test-cluster-up:
 test-cluster-clean:
 	sudo minikube delete
 yaml-deploy:
-	kubectl create -f deploy/k8s-1.16/rbac.yaml
-	kubectl create -f deploy/k8s-1.16/csi-dropbox-plugin.yaml
-	kubectl create -f deploy/k8s-1.16/csi-dropbox-attacher.yaml
+	kubectl create -f deploy/k8s-1.17/rbac.yaml
+	cp deploy/k8s-1.17/csi-dropbox-plugin.yaml /tmp/csi-dropbox-plugin.yaml
+	sed -i 's\quay.io/woohhan/dropbox-csi:latest\dropbox-csi:canary\' /tmp/csi-dropbox-plugin.yaml
+	kubectl create -f /tmp/csi-dropbox-plugin.yaml
+	kubectl create -f deploy/k8s-1.17/csi-dropbox-attacher.yaml
 	kubectl create -f deploy/pod.yaml
 yaml-clean:
 	kubectl delete --ignore-not-found=true -f deploy/pod.yaml
-	kubectl delete --ignore-not-found=true -f deploy/k8s-1.16/csi-dropbox-attacher.yaml
-	kubectl delete --ignore-not-found=true -f deploy/k8s-1.16/csi-dropbox-plugin.yaml
-	kubectl delete --ignore-not-found=true -f deploy/k8s-1.16/rbac.yaml
+	kubectl delete --ignore-not-found=true -f deploy/k8s-1.17/csi-dropbox-attacher.yaml
+	kubectl delete --ignore-not-found=true -f deploy/k8s-1.17/csi-dropbox-plugin.yaml
+	kubectl delete --ignore-not-found=true -f deploy/k8s-1.17/rbac.yaml
 help:
 	@echo "Usage: make [Target ...]"
 	@echo "  build"

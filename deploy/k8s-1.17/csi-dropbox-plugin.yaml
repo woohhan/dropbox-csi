@@ -63,7 +63,7 @@ spec:
             - mountPath: /csi-dropbox-data
               name: csi-data-dir
         - name: dropbox-csi
-          image: dropbox-csi:canary
+          image: quay.io/woohhan/dropbox-csi:latest
           args:
             - "--v=5"
             - "--endpoint=$(CSI_ENDPOINT)"

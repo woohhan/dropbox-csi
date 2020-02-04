@@ -11,7 +11,8 @@ clean:
 	go clean ./...
 	rm -rf build/
 test-cluster-up:
-	CHANGE_MINIKUBE_NONE_USER=true sudo minikube start --vm-driver=none
+	CHANGE_MINIKUBE_NONE_USER=true sudo minikube start --vm-driver=none --extra-config=kubeadm.ignore-preflight-errors=SystemVerification --extra-config=kubelet.resolv-conf=/run/systemd/resolve/resolv.conf
+	sudo chown -R runner:runner /home/runner/
 	sleep 10
 test-cluster-clean:
 	sudo minikube delete

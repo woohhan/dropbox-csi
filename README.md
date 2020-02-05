@@ -26,5 +26,6 @@ For now, you can make persistent volume with `dropbox.csi.k8s.io` driver.
 kubectl create -f deploy/pod.yaml
 ```
 
-## Contact
-Woohyung Han (woohhan@gmail.com)
+## Troubleshooting
+Please submit an issue at [Issues](https://github.com/woohhan/dropbox-csi/issues).
+You can use both english and korean. If you have other questions please contact: Woohyung Han (woohhan@gmail.com)

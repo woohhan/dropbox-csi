@@ -23,10 +23,15 @@ jobs:
         run: make yaml-deploy
       - name: e2e tests
         run: make test
-      - name: yaml clean
-        run: make yaml-clean
-      - name: test cluster clean
-        run: make test-cluster-clean
+  deploy:
+    runs-on: ubuntu-18.04
+    needs: e2e
+    if: github.ref == 'refs/heads/master'
+    steps:
+      - name: checkout
+        uses: actions/checkout@v1
+      - name: docker image build
+        run: make image-build
       - uses: azure/docker-login@v1
         with:
           login-server: quay.io

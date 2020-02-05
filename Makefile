@@ -22,10 +22,12 @@ yaml-deploy:
 	sed -i 's\quay.io/woohhan/dropbox-csi:latest\dropbox-csi:canary\' /tmp/csi-dropbox-plugin.yaml
 	kubectl create -f /tmp/csi-dropbox-plugin.yaml
 	kubectl create -f deploy/k8s-1.17/csi-dropbox-attacher.yaml
+	kubectl create -f deploy/secret.yaml
 	kubectl create -f deploy/pod.yaml
 	sleep 5
 	kubectl wait --for=condition=Ready pod/dropbox-pod --timeout 90s
 yaml-clean:
+	kubectl delete --ignore-not-found=true -f deploy/secret.yaml
 	kubectl delete --ignore-not-found=true -f deploy/pod.yaml
 	kubectl delete --ignore-not-found=true -f deploy/k8s-1.17/csi-dropbox-attacher.yaml
 	kubectl delete --ignore-not-found=true -f deploy/k8s-1.17/csi-dropbox-plugin.yaml

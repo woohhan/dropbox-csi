@@ -1,10 +1,10 @@
 .DEFAULT_GOAL := help
 
+.PHONY: build image-build clean
+
 build:
-	make clean
 	CGO_ENABLED=0 GOOS=linux go build -a -ldflags '-extldflags "-static"' -o ./build/dropbox-csi ./cmd/dropbox
 image-build:
-	make clean
 	make build
 	docker build -t dropbox-csi:canary -f Dockerfile .
 clean:

@@ -17,6 +17,8 @@ jobs:
           sudo snap install kubectl --classic
       - name: test cluster up
         run: make test-cluster-up && kubectl get pods -A
+      - name: create secret
+        run: kubectl create secret generic dropbox-csi --from-literal=token=${{ secrets.DropboxToken }}
       - name: yaml deploy
         run: make yaml-deploy
       - name: e2e tests

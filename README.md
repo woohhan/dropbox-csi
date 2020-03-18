@@ -1,4 +1,4 @@
-# CSI for Dropbox ![Dropbox-CSI](https://github.com/woohhan/dropbox-csi/workflows/Dropbox-CSI/badge.svg?branch=master)
+# Kubernetes CSI for Dropbox ![Dropbox-CSI](https://github.com/woohhan/dropbox-csi/workflows/Dropbox-CSI/badge.svg?branch=master)
 ## Overview
 Kubernetes Dropbox-CSI plugin is developed to manage dropbox on kubernetes.
 

@@ -26,8 +26,8 @@ func NewNodeServer(nodeId string) *nodeServer {
 }
 
 const (
-	rootDir string = "/mnt/csi-dropbox"
-	dataDir string = rootDir + "/data"
+	rootDir = "/mnt/csi-dropbox"
+	dataDir = rootDir + "/data"
 )
 
 func (n *nodeServer) NodeGetInfo(context.Context, *csi.NodeGetInfoRequest) (*csi.NodeGetInfoResponse, error) {
@@ -160,12 +160,17 @@ func (n nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublishV
 		options = append(options, "ro")
 	}
 
+	dirToMountInDropbox := dataDir
+	if len(req.VolumeContext["path"]) != 0 {
+		dirToMountInDropbox = path.Join(dirToMountInDropbox, req.VolumeContext["path"])
+	}
+
 	mounter := mount.New("")
-	if err := mounter.Mount(dataDir, targetPath, "", options); err != nil {
+	if err := mounter.Mount(dirToMountInDropbox, targetPath, "", options); err != nil {
 		var errList strings.Builder
 		errList.WriteString(err.Error())
 	}
-	glog.V(4).Infof("dropbox-csi: volume %s is mount to %s.", dataDir, targetPath)
+	glog.V(4).Infof("dropbox-csi: volume %s is mount to %s.", dirToMountInDropbox, targetPath)
 
 	return &csi.NodePublishVolumeResponse{}, nil
 }

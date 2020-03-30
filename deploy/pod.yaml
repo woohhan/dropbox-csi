@@ -14,7 +14,7 @@ spec:
       name: dropbox-csi
       namespace: default
     volumeAttributes:
-      # (Optional) Specify the path to use withing Dropbox. Default is the root directory.
+      # (Optional) Specify the path to use within Dropbox. Default is the root directory.
       path: "dir1"
 ---
 apiVersion: v1

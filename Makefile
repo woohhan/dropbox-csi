@@ -32,7 +32,7 @@ yaml-clean:
 	kubectl delete --ignore-not-found=true -f deploy/k8s-1.17/rbac.yaml
 test:
 	kubectl exec -it dropbox-pod -- ls /var/www/html
-	kubectl exec -it dropbox-pod -- ls /var/www/html | grep e2e_test_file > /dev/null
+	kubectl exec -it dropbox-pod -- ls /var/www/html | grep e2e_test_file2 > /dev/null
 log:
 	kubectl logs csi-dropboxplugin-0 dropbox-csi
 lt:

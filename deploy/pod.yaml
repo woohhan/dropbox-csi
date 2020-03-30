@@ -13,6 +13,9 @@ spec:
     nodeStageSecretRef:
       name: dropbox-csi
       namespace: default
+    volumeAttributes:
+      # (Optional) Specify the path to use withing Dropbox. Default is the root directory.
+      path: "dir1"
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim

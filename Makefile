@@ -33,6 +33,13 @@ yaml-clean:
 test:
 	kubectl exec -it dropbox-pod -- ls /var/www/html
 	kubectl exec -it dropbox-pod -- ls /var/www/html | grep e2e_test_file > /dev/null
+log:
+	kubectl logs csi-dropboxplugin-0 dropbox-csi
+lt:
+	make yaml-clean
+	make image-build
+	make yaml-deploy
+	make test
 help:
 	@echo "Usage: make [Target ...]"
 	@echo "  build"
@@ -43,3 +50,4 @@ help:
 	@echo "  yaml-deploy"
 	@echo "  yaml-clean"
 	@echo "  test"
+	@echo "  lt                     Run local test"

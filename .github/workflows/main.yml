@@ -39,5 +39,5 @@ jobs:
           password: ${{ secrets.QuayPassword }}
       - name: push with latests
         run: |
-          docker tag dropbox-csi:canary quay.io/woohhan/dropbox-csi:latest
+          docker tag quay.io/woohhan/dropbox-csi:canary quay.io/woohhan/dropbox-csi:latest
           docker push quay.io/woohhan/dropbox-csi:latest

@@ -3,16 +3,16 @@ package dropbox
 import (
 	"bufio"
 	"bytes"
-	"os"
-	"os/exec"
-	"strings"
-
 	"github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/golang/glog"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"k8s.io/utils/mount"
+	"os"
+	"os/exec"
+	"path"
+	"strings"
 )
 
 type nodeServer struct {
@@ -26,7 +26,8 @@ func NewNodeServer(nodeId string) *nodeServer {
 }
 
 const (
-	volumePath string = "/mnt/csi-dropbox-data"
+	rootDir string = "/mnt/csi-dropbox"
+	dataDir string = rootDir + "/data"
 )
 
 func (n *nodeServer) NodeGetInfo(context.Context, *csi.NodeGetInfoRequest) (*csi.NodeGetInfoResponse, error) {
@@ -51,27 +52,30 @@ func (n nodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStageVolum
 	}
 
 	glog.Infof("targetPath: %v", req.GetStagingTargetPath())
-	glog.Infof("volumePath: %v", volumePath)
+	glog.Infof("dataDir: %v", dataDir)
 
-	err := os.MkdirAll(volumePath, 0777)
+	err := os.MkdirAll(dataDir, 0777)
 	if err != nil {
-		glog.Error("Can't create volumePath %s", volumePath)
+		glog.Error("Can't create dataDir %s", dataDir)
 		return nil, err
 	}
 
-	err = writeFile("/dbxfs_config.json", "{\"access_token_command\": [\"cat\", \"/dbxfs_token\"], \"send_error_reports\": true, \"asked_send_error_reports\": true}")
+	dbxfsConfigPath := path.Join(rootDir, "dbxfs_config.json")
+	dbxfsTokenPath := path.Join(rootDir, "dbxfs_token")
+
+	err = writeFile(dbxfsConfigPath, "{\"access_token_command\": [\"cat\", \""+dbxfsTokenPath+"\"], \"send_error_reports\": true, \"asked_send_error_reports\": true}")
 	if err != nil {
 		glog.Error("Can't create dbxfs config file")
 		return nil, err
 	}
 
-	err = writeFile("/dbxfs_token", token)
+	err = writeFile(dbxfsTokenPath, token)
 	if err != nil {
 		glog.Error("Can't create dbxfs token file")
 		return nil, err
 	}
 
-	cmd := exec.Command("dbxfs", volumePath, "-c", "/dbxfs_config.json")
+	cmd := exec.Command("dbxfs", dataDir, "-c", dbxfsConfigPath)
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
 	cmd.Stdout = &stdout
@@ -81,7 +85,7 @@ func (n nodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStageVolum
 		glog.Errorf("Cant mount dbxfs: %s %s", stdout.String(), stderr.String())
 		return nil, err
 	}
-	glog.V(4).Infof("dropbox-csi: volume %s is mounted %s", volumePath, stdout.String())
+	glog.V(4).Infof("dropbox-csi: volume %s is mounted %s", dataDir, stdout.String())
 
 	return &csi.NodeStageVolumeResponse{}, nil
 }
@@ -114,11 +118,11 @@ func (n nodeServer) NodeUnstageVolume(ctx context.Context, req *csi.NodeUnstageV
 		return nil, status.Error(codes.InvalidArgument, "Target path missing in request")
 	}
 
-	err := mount.New("").Unmount(volumePath)
+	err := mount.New("").Unmount(dataDir)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-	glog.V(4).Infof("dropbox-csi: volume %s is unmounted,", volumePath)
+	glog.V(4).Infof("dropbox-csi: volume %s is unmounted,", dataDir)
 
 	return &csi.NodeUnstageVolumeResponse{}, nil
 }
@@ -157,11 +161,11 @@ func (n nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublishV
 	}
 
 	mounter := mount.New("")
-	if err := mounter.Mount(volumePath, targetPath, "", options); err != nil {
+	if err := mounter.Mount(dataDir, targetPath, "", options); err != nil {
 		var errList strings.Builder
 		errList.WriteString(err.Error())
 	}
-	glog.V(4).Infof("dropbox-csi: volume %s is mount to %s.", volumePath, targetPath)
+	glog.V(4).Infof("dropbox-csi: volume %s is mount to %s.", dataDir, targetPath)
 
 	return &csi.NodePublishVolumeResponse{}, nil
 }
@@ -173,9 +177,10 @@ func (n nodeServer) NodeUnpublishVolume(ctx context.Context, req *csi.NodeUnpubl
 	if len(req.GetTargetPath()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Target path missing in request")
 	}
+
 	targetPath := req.GetTargetPath()
 
-	err := mount.New("").Unmount(req.GetTargetPath())
+	err := mount.New("").Unmount(targetPath)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

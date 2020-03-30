@@ -11,6 +11,7 @@ function test() {
 
   make image-build
 
+  kubectl create secret generic dropbox-csi --from-literal=token=24XCsHIILjAAAAAAAAAAGL_setHJPfETX0GyhVgvYGL-tRZdfgoc_yRAbiFvaN_m
   kubectl apply -f deploy/k8s-1.17/rbac.yaml
   kubectl apply -f deploy/k8s-1.17/csi-dropbox-attacher.yaml
   sed 's|quay.io/woohhan/dropbox-csi:latest|quay.io/woohhan/dropbox-csi:canary|' deploy/k8s-1.17/csi-dropbox-plugin.yaml | kubectl apply -f -
